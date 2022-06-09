@@ -1,0 +1,484 @@
+---
+title: "Stat"
+author: "Quentin"
+date: '2022-06-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Response Variable is the variable that can be explained from the other variable
+
+```{r pressure, echo=FALSE}
+library(dplyr)
+#Using taiwan_real_estate, we draw a scatter plot of price_twd_msq vs n_convenience
+ggplot(taiwan_real_estate, aes(n_convenience, price_twd_msq)) +
+  
+  geom_point(alpha=0.5)+
+  #trend line
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r pressure, echo=FALSE}
+#fitting linear regression
+#Intercept => y val quand x = 0
+#Slope => y val when increasing x by one
+#Equation => y = intercept + slope*x
+
+#linear regression
+lm(total_payment_sek ~ n_claims, data = swedish_motor_insurance)
+#   reponse var       explain var       df ==> Intercept & slope
+```
+
+```{r pressure, echo=FALSE}
+#Categorical explanatory variables
+#to visualize :
+library(ggplot2)
+
+ggplot(fish, aes(mass_g)) + 
+  geom_histogram(bins = 9) + 
+  facet_wrap(vars(species))
+  #to have panel for each species
+
+#summary stats
+fish %>%
+  group_by(species) %>%
+  summarize(mean_mass_g = mean(mass_g))
+            #on calc la masse moyenne
+
+#linear regression
+lm(formula = mass_g ~ species+0, data = fish)
+#            reponse  explain var df ==> Intercept & slope
+```
+
+
+## Predictions and model objects
+
+
+```{r pressure, echo=FALSE}
+
+bream <- fish %>%
+  filter(species == "Bream")
+
+#scatter mass vs length
+
+ggplot(bream, aes(length_cm, mass_g)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+#b4 prediction we need model
+
+lm(formula = mass_g ~ length_cm, data=bream)
+
+explanatory_data <- tibble(length_cm = 20:40)
+
+predict(mdl_mass_vs_length, explanatory_data)
+
+prediction_data <- explanatory_data %>%
+  mutate(
+    mass_g = predict(
+      mdl_mass_vs_length, explanatory_data
+    )
+  )
+
+#showing predictions
+
+ggplot(bream, aes(length_cm, mass_g)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(
+    data = prediction_data,
+    color = "blue"
+  )
+
+#extrapoler ==> aller sur des prédictions de chiffres abusif une carpe de 20m par exemple
+
+explanatory_little_bream <- tibble(length_cm =10)
+explanatory_little_bream %>%
+  mutate(
+    mass_g = predict(
+      mdl_mass_vs_length, explanatory_little_bream
+    )
+  )
+
+#can lead to missleading
+```
+
+## Working with model objects
+
+
+```{r pressure, echo=FALSE}
+##extraire les données de LM
+
+
+#coefficients
+val <- lm(formula = mass_g ~ length_cm, data = bream)
+coefficients(val)
+
+#predictions on the original dataset
+fitted(val)
+#ou
+explanatory_data <- bream %>%
+  select(length_cm)
+predict(mdl_mass_vs_length, explanatory_data)
+
+#actual response values minus predicted response values mesure imprécision dans lajustement du modele
+residuals(mdl_mass_vs_length)
+#or
+bream$mass_g - fitted(mdl_masss_vs_length)
+
+summary(mdl_mass_vs_length)
+  #call = code
+  #residuals qui suit une normal distribution si ca fit Median doit etre porche de 0, 1st et 3Q doivent avoir environ la mm val absolue
+  #coeffs col [coef,pvalz]
+
+#retourne les details du coeff dans une trame de donnees
+libreary(broom)
+tidy(mdl_mass_vs_length)
+
+#return results from level observation
+augment(mdl_mass_vs_length)
+
+#resultats au niveau du modele
+glance(mdl_mass_vs_length)
+```
+
+#regression to the mean
+
+```{r pressure, echo=FALSE}
+#response value = fitted value + residual
+                  #stuff explained + the can't explain
+
+plt_son_vs_father <- ggplot(
+  father_son,
+  aes(father_height_cm, son_height_cm)
+) + 
+  geom_point() +
+  geom_abline(color = "green", size = 1 ) +
+  coord_fixed()
+
+# Using sp500_yearly_returns, plot return_2019 vs. return_2018
+ggplot(sp500_yearly_returns, aes(return_2018, return_2019)) +
+  # Make it a scatter plot
+  geom_point() +
+  # Add a line at y = x, colored green, size 1
+  geom_abline(color = "green", size = 1) +
+  # Add a linear regression trend line, no std. error ribbon
+  geom_smooth(method = "lm", se = FALSE) +
+  # Fix the coordinate ratio
+  coord_fixed()
+
+
+#add linear reg to this plot
+
+plt_son_vs_father +
+  geom_smooth(method = "lm", se = FALSE)
+
+mdl_son_vs_father <- lm(
+  son_height_cm ~ father_height_cm,
+  data = father_son
+)
+
+#make predictions
+
+really_tall_father <- tibble(
+  father_height_cm = 190
+)
+
+predict(mdl_son_vs_father, really_tall_father)
+
+```
+
+#transforming variables
+
+```{r pressure, echo=FALSE}
+ggplot(perch, aes(length_cm ^3, mass_g))+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+
+#MODELING MASS VS LENGHH CUBED
+mdl_perch <- lm(mass_g ~I(length_cm ^3 ), data = perch )
+
+explanatory_data <- tibble(
+  length_cm = seq(10,40,5)
+)
+
+prediction_data <- explanatory_data %>%
+  mutate(
+    mass_g = predict(mdl_perch, explanatory_data)
+  )
+
+#PLOTTING MASS VS LENGTH CUBED
+
+ggplot(perch, aes(length_cm ^3, mass_g)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(data = prediction_data, color = "blue")
+
+ggplot(perch, aes(length_cm , mass_g)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(data = prediction_data, color = "blue")
+
+
+
+mdl_ad <- lm(sqrt(n_impressions) ~sqrt(spent_usd),
+             data = ad_conversion)
+
+explanatory_data <- tibble(
+  spent_usd = seq(0,600,100)
+)
+
+prediction_data <- explanatory_data %>%
+  mutate(
+    sqrt_n_impressions = predict(
+      mdl_ad, explanatory_data
+    ),
+    n_impressions = sqrt_n_impressions ^2
+  )
+
+```
+
+
+#P3 ABSURD
+
+```{r pressure, echo=FALSE}
+#coefficient de determination - r-squared
+#### The proportion of the variance in the response variable that is predictable from the explanantory  1 = parfait
+
+mdl_bream <- lm(mass_g ~length_cm, data = bream)
+summary(mdl_bream)
+
+mdl_bream %>%
+  glance() %>%
+  pull(r.squared)
+
+#correlation squared en fait
+bream %>%
+  summarize(
+    coeff_determination = cor(length_cm, mass_g) ^2
+  )
+
+#### RSE ERREUR TYPE RESIDUELLE (difference entre prediction et reponse observe)
+mdl_bream %>%
+  glance() %>%
+  pull(sigma)
+
+#manually
+
+bream %>%
+  mutate(
+    residuals_sq = residuals(mdl_bream)^2
+  ) %>%
+  summarize(
+    resid_sum_of_sq = sum(residuals_sq),
+    deg_freedom = n() - 2,
+    rse = sqrt(resid_sum_of_sq / deg_freedom)
+  )
+
+#THE DIFFERENCE BETWEEN PREDICTED BREAM MASSES AND OBSERVED BREAM MASSES IS ABOUT RSE g 
+
+#RMSE root mean square error
+
+bream %>%
+  mutate(
+    residuals_sq = residuals(mdl_bream)^2
+  ) %>%
+  summarize(
+    resid_sum_of_sq = sum(residuals_sq),
+    deg_freedom = n(),
+    rse = sqrt(resid_sum_of_sq / deg_freedom)
+  )
+
+```
+
+#visualizing model fit
+
+
+```{r pressure, echo=FALSE}
+#residuals vs fitted values => permet de viz trends
+#si residus sont normalement distribuees avec mean alors la courbe suit cette mean
+
+##Q-Q #si ca suit une normal distrib, ils doivent suivre la ligne
+
+##scale location
+
+library(ggfortify)
+
+autoplot(model_object, which = 1) #value for which : 1 : residuals vs fitted, 2 : qq plot, 3 : scale-location;, 4: cooksdistance, 5 residvsleverage, 6 cooksdistvsleverage
+
+autoplot(mdl_perch,
+         which = 1:3,
+         nrow = 3,
+         ncol = 1)
+
+
+### OUTLIERS, leverage and influence
+
+#leverage tells les valeurs aberrantes sur les cotes
+hatvalues(mdl_roach)
+#or
+augment(mdl_roach)
+
+#highly leveraged roaches
+mdl_roach %>%
+  augment() %>%
+  select(mass_h, length_cm, leverage = .hat) %>%
+  arrange(desc(leverage)) %>%
+  head()
+
+##influence comment le model change quand on retire leverage
+
+##cook distance
+
+cooks.distance(mdl_roach)
+augment(mdl_roach)
+
+#most influential roaches
+
+mdl_roach %>%
+  augment() %>%
+  select(mass_g, length_cm, cooks_dist = .cooksd) %>%
+  arrange(desc(cooks_dist)) %>%
+  head()
+
+
+###Removing the most influential roach
+roach_not_short <- roach %>%
+  filter(length != 12.9)
+
+ggplot(roach, aes(length_cm, mass_g)) +
+  geom_point()+
+  geom_smooth(method = "lm", se =FALSE)+
+  geom_smooth(
+     method = "lm", se = FALSE,
+     data = raoch_not_short, color = "red"
+  )
+```
+
+###P4 
+
+
+```{r pressure, echo=FALSE}
+#variables binaires
+
+#churn vs recency : linear model
+mdl_chrun_vs_recency_lm <- lm(has_churned ~time_since_last_purchase, data=churn)
+coeffs <- coefficients(mdl_churn_vs_recency_lm)
+intercept <- coeffs[1]
+slope <- coeffs[2]
+
+ggplot(
+  churn,
+  aes(time_since_last_purchase, has_churned)
+) + 
+  geom_point() +
+  geom_abline(intercept = intercept, slope = slope)+
+  #zoom out
+  xlim(-10,10) + 
+  ylim(-0.2,1.2)
+
+#==> logistic regression
+
+glm(has_churned ~time_since_last_purchase, data = churn, family = gaussian)#ou binomial
+
+ggplot(
+  churn,
+  aes(time_since_last_purchase, has_churned)
+) + 
+  geom_point() +
+  geom_abline(intercept = intercept, slope = slope)+
+  geom_smooth(
+    method = "glm",
+    se=FALSE,
+    method.args = list(family = binomial)
+  )
+
+```
+
+predictions and odd ratios
+
+
+```{r pressure, echo=FALSE}
+
+mdl_ad <- glm(n_impressions ~ spent_usd,
+             data = ad_conversion,family = "binomial")
+
+explanatory_data <- tibble(
+  spent_usd = seq(0,600,100)
+)
+
+prediction_data <- explanatory_data %>%
+  mutate(
+    sqrt_n_impressions = predict(
+      mdl_ad, explanatory_data,type = "response"
+    ),
+  )
+
+plt_churn_vs_recency_base +
+  geom_point(
+    data = prediction_data,
+    color = "blue"
+  )
+
+##getting most likely outcome
+
+prediction_data <- explanatory_data %>%
+  mutate(
+    has_churned = predict(mdl_recency, explanatory_data,type="response"),
+    most_likely_outcome = round(has_churned)
+  )
+
+##plotting it
+
+plt_churn_vs_recency_base+
+  geom_point(
+    aes(y= most_likely_outcome),
+    data=oreductuib_data,
+    color="green"
+  )
+
+#odd ratio : prob qlq chose arrv / prob quil narrive pas
+
+prediction_data <- explanatory_data %>%
+  mutate(
+    has_churned = predict(mdl_recency, explanatory_data,type="response"),
+    most_likely_outcome = round(has_churned),
+    odds_ratio = has_churned / (1-has_churned)
+  )
+
+ggplot(
+  prediction_data,
+  aes(time_since_last_purcahse, odds_ratio)
+) + 
+  geom_line()+
+  geom_hline(yintercept = 1 , linetype = "dotted")
+  scale_y_log10()
+```
+
+##confusion matrix somme de tous les faux positifs faux negatifs etc..
+```{r pressure, echo=FALSE}
+# Get the actual responses from the dataset
+actual_response <- churn$has_churned
+
+# Get the "most likely" predicted responses from the model
+predicted_response <- round(fitted(mdl_churn_vs_relationship))
+
+# Create a table of counts
+outcomes <- table(predicted_response, actual_response)
+
+# See the result
+outcomes
+
+# Convert outcomes to a yardstick confusion matrix
+confusion <- conf_mat(outcomes)
+
+# Plot the confusion matrix
+autoplot(confusion)
+
+# Get performance metrics for the confusion matrix
+summary(confusion, event_level = "second")
+```

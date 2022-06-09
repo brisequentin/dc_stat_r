@@ -1,0 +1,69 @@
+---
+title: "graphs"
+author: "Quentin"
+date: '2022-06-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r pressure, echo=FALSE}
+
+library(dplyr) 
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(esquisse)
+
+
+
+```
+```{r pressure, echo=FALSE}
+
+mydata = data.frame(read.csv("PhD.v3.csv"))
+#esquisser(mydata)
+
+mydata = data.frame(read.csv("Biblio_synthese.csv"))
+mydata2 <- data.frame(
+  section = c(mydata$section[1:1437704]),
+  val = c(as.numeric(table(mydata$titre)))
+)
+#esquisser(mydata)
+
+
+#summary(mydata)
+
+
+
+
+mydata2 %>%
+ ggplot() +
+  aes(x = section, y= val) +
+  geom_boxplot() +
+  scale_fill_hue(direction = 1) +
+  theme_minimal()
+
+```
+
+
+```{r pressure, echo=FALSE}
+
+
+```
+
+```{r pressure, echo=FALSE}
+
+
+
+mydata %>%
+ filter(Year >= 1990L & Year <= 2020L | is.na(Year)) %>%
+ ggplot() +
+  aes(x = Year, fill = Langue_rec) +
+  geom_histogram(bins = 30L) +
+  scale_fill_hue(direction = 1) +
+  theme_minimal()
+```
