@@ -1,0 +1,21 @@
+---
+title: "ANOVA"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+ANOVA : Analysis of variance
+
+1- Bases :
+
+
+
+
+
+2- test stat + °liberte :
+
+
+3- multicolinearite :
