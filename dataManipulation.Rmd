@@ -12,15 +12,42 @@ knitr::opts_chunk$set(echo = TRUE)
 #4 Horsemen :
 
 select() => return selected cols
-filter(col == val) => condition pour filtrer
+filter(col == val) => condition pour filtrer filter pour bcp de values, filter(name %in% c("amy","chris"))
 arrange() => change le sort en fonction d'une autre col, 
   desc() => ordre décroissant, pour descending
-mutate()
+mutate() => ajouter nouvelles var ou modifier existing var  ||||| mutate(unemployed_population = population * unemployment / 100) grouped,
 
 tibble()
 glimpse() => return a few values from all the columns | glimpse = aperçu
 
 
-```{r}
-```
+count(var,wt = population(count pour la population) sort = TRUE) - c un table en gros
 
+summarize(total_population = sum(population),average_unemployment = mean(unemployment))
+group_by(state, metro)
+ungroup()
+
+the top n verb
+top_n(nombre dobservations, column) (c'est un head en gros)
+
+advanced method selectinh
+
+select(1:3) => return selected cols
+      contains("value") selectionne les cols qui continnent le mot work
+      starts_with()
+      ends_with()
+      last_col()
+      ?select_helpers
+      -col2 (retire la var)
+    
+rename(newname=col)
+ou select
+
+
+transmute(state, county, fraction_men = men/population) select avec mutate
+
+ggplot(babynames_filtered, aes(x = year, y=number)) + 
+  geom_line()
+  
+window() take vector return autre
+  lag(v) => décal vecteur v vers la droite
