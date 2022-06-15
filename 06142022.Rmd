@@ -1,0 +1,156 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(dplyr)
+#install.packages('questionr')
+library(questionr)
+library(ggplot2)
+
+
+library(dplyr) 
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(esquisse)
+library(plyr)
+library(tidyverse)
+library(lubridate)
+library(naniar)
+library(scales)
+library(ggsci)
+library(GGally)
+library(ggthemes)
+library(lemon)
+library(rvest)
+
+
+
+mydata = read.csv("Biblio_synthese.csv")
+summary(mydata)
+table(mydata$type)
+install.packages("rgrs", dependencies=TRUE, repos='http://cran.rstudio.com/')
+
+jeu1 <- mydata %>% 
+  select(section,type) %>%
+  filter(type == "chapter" | type == "article-journal") %>%
+  mutate(chapter = 0) %>%
+  mutate(chapter=replace(chapter, type=="chapter",1))
+
+jeu2 <- mydata %>% 
+  select(section,type) %>%
+  filter(type == "paper-conference" | type == "article-journal") %>%
+  mutate(paperconference = 0) %>%
+  mutate(paperconference=replace(paperconference, type=="paper-conference",1))
+
+
+jeu3 <- mydata %>% 
+  select(section,type) %>%
+  filter(type == "chapter" | type == "article-journal" | type == "paper-conference") %>%
+  mutate(chapter = 0) %>%
+  mutate(chapter=replace(chapter, type=="chapter",1))
+
+
+jeu1 <- glm(chapter ~ section, data=jeu1, family=binomial)
+jeu2 <- glm(paperconference ~ section, data=jeu2, family=binomial)
+jeu3 <- glm(chapter ~ section, data=jeu3, family=binomial)
+
+odds.ratio(jeu1)
+odds.ratio(jeu2)
+odds.ratio(jeu3)
+
+
+dataphd = read.csv("PhD.v3.csv")
+
+val = dataphd %>%
+  count(Identifiant.auteur)
+val = as.data.frame(val)
+
+p <- val %>% ggplot(aes(x = n)) +
+    geom_histogram(bins = 15)
+p 
+
+
+```
+
+```{r}
+dataphd = read.csv("PhD.v3.csv")
+
+val = dataphd %>%
+  count(Identifiant.auteur)
+val = as.data.frame(val)
+
+p <- val %>% ggplot(aes(x = n)) +
+    geom_histogram(bins = 15)
+p 
+
+dataphd = read.csv("PhD.v3.csv")
+#valeurs = c(1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,4,4)
+#sexe = c("M","M","M","M","M","M","M","M","M","M","M","F","F","F","F","F","F","F","F","F","F","F","F", "F","F","F","F","F","F","F","F","F","F")
+#age = c(12,13,1,12,13,1,12,13,1,12,13,1,12,13,1,12,13,1,12,13,1,12,13,1,12,13,1,12,13,1,12,13,1)
+
+dataphd <- dataphd %>%
+  select(Genre,Etablissement.de.soutenance,Discipline) %>%
+  filter(is.na(Genre) == FALSE && is.na(Etablissement.de.soutenance) == FALSE && is.na(Discipline)==FALSE)
+
+length(dataphd$Genre)
+length(dataphd$Etablissement.de.soutenance)
+length(dataphd$Discipline)
+
+compilation <- lm(dataphd$Etablissement.de.soutenance~factor(dataphd$discipline)*factor(dataphd$Genre))
+analyse<-anova(compilation)
+analyse
+
+library(dplyr)
+#install.packages('questionr')
+library(questionr)
+library(ggplot2)
+
+
+library(dplyr) 
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+library(esquisse)
+library(plyr)
+library(tidyverse)
+library(lubridate)
+library(naniar)
+library(scales)
+library(ggsci)
+library(GGally)
+library(ggthemes)
+library(lemon)
+library(rvest)
+
+detach("package:plyr", unload=TRUE)
+
+mydata = read.csv("Biblio_synthese.csv")
+grouped_data<-mydata %>%
+        group_by(numeroTEL, type) %>%
+        summarise(n = n()) %>%
+        mutate_all(na_if,"")
+
+
+
+  
+```
+```{r}
+dataphd <- read_csv("PhD.v3.csv")
+dataphd2 <- as_tibble(read_csv("PhD.v3.csv"))
+dataphd2$`Date de soutenance` <- dmy(these$`Date de soutenance`)
+dataphd2$`Publication dans theses.fr` <- dmy(these$`Publication dans theses.fr`)
+dataphd2$`Mise a jour dans theses.fr` <- dmy(these$`Mise a jour dans theses.fr`)
+dataphd2$Statut <- as.factor(these$Statut)
+dataphd2$`Langue de la these` <- as.factor(these$`Langue de la these`)
+dataphd2$`Accessible en ligne` <- as.factor(these$`Accessible en ligne`)
+dataphd2$`Identifiant directeur` <- na_if(these$`Identifiant directeur`,"na")
+```
